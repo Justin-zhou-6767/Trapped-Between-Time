@@ -8,7 +8,7 @@ const BACKUP = -167
 
 const LEVEL_MIN_Y = 0.0     
 const LEVEL_MAX_Y = 2000.0 
-const LEVEL_MIN_X = 0.0
+const LEVEL_MIN_X = -400
 const LEVEL_MAX_X = 3000.0
 
 const ACCELERATION =4000.0
@@ -16,12 +16,14 @@ const FRICTION = 5000.0
 const FALL_GRAVITY_MULT = 1.8
 var dead := false
 const JUMP_CUT_MULT = 0.5       
-const MAXDEATHS = 5
+const MAXDEATHS = 6
 var corpses: Array[Node]=[]
 var Deathcount :=0
 
+@onready var rewind_overlay = get_tree().current_scene.get_node("CanvasLayer/RewindOverlay")
 @onready var heart_display = get_tree().current_scene.get_node("CanvasLayer/HBoxContainer")
 @onready var spawn: Marker2D = get_tree().current_scene.get_node("Marker2D")
+
 func _physics_process(delta: float) -> void:
 	
 	if dead:
@@ -74,11 +76,12 @@ func die() ->void:
 	if dead:
 		return
 	Deathcount+=1
-	if(Deathcount>5):
+	if(Deathcount>=MAXDEATHS):
 		fullrespawn()
 		return
 	dead = true
 	spawncorpses()
+	play_rewind_effect()
 	print("died")
 	velocity=Vector2.ZERO
 	heart_display.update_hearts(MAXDEATHS-Deathcount)
@@ -88,7 +91,15 @@ func die() ->void:
 	global_position.y = clamp(global_position.y, LEVEL_MIN_Y, LEVEL_MAX_Y)
 	await get_tree().create_timer(0.4).timeout
 	dead=false
-	
+func play_rewind_effect() -> void:
+	var material: ShaderMaterial = rewind_overlay.material
+	var tween := create_tween()
+
+	Engine.time_scale = 0.2
+	tween.tween_method(func(v): material.set_shader_parameter("progress", v), 0.0, 1.0, 0.15)
+	tween.tween_interval(0.1)
+	tween.tween_method(func(v): material.set_shader_parameter("progress", v), 1.0, 0.0, 0.2)
+	tween.tween_callback(func(): Engine.time_scale = 1.0)
 func fullrespawn()->void:
 	dead = false
 	global_position = spawn.global_position

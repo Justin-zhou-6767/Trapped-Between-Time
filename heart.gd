@@ -11,6 +11,8 @@ func update_hearts(currentlives:int)->void:
 		var heart:= TextureRect.new()
 		heart.texture=hearttexture
 		heart.custom_minimum_size=Vector2(32,32)
+		heart.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		heart.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		add_child(heart)
 
 
